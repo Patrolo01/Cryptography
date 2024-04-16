@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZK Example</title>
+</head>
+<body>
+  <div>
+
+  </div>
+  <div>
+    <div>
+      <label for="hash">Hash:</label>
+      <input type="text" id="hash"> <button id="draw">draw</button>
+    </div>
+    <div>
+      <label for="n">Number:</label>
+      <input type="number" id="n"> <button id="guess">guess</button> 
+    </div>
+    <div id="result">
+    </div>
+    <div>
+      <h3>Verifier</h3>
+      <div>
+        <label for="verify-n">Number:</label>
+        <input type="text" id="verify-n">
+      </div>
+      <div>
+        <label for="verify-nonce">Nonce:</label>
+         <input type="text" id="verify-nonce">
+      </div>
+      <div>
+        <button id="verify">verify</button>
+      </div>
+      <div id="verify-result">
+      </div>
+    </div>
+  </div>
+  <script src="main.js"></script>
+</body>
+</html>

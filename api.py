@@ -7,7 +7,7 @@ from utils import ElipticCurve, ElipticPoint, Prover, Verifier
 from flask_cors import CORS, cross_origin
 
 
-app = flask.Flask(__name__, static_folder='public')
+app = flask.Flask(__name__, static_folder='public', static_url_path='')
 
 
 hashes = dict()
@@ -21,6 +21,47 @@ global drawn_number
 drawn_number = None
 server_prover = Prover(secp256k1, r)
 client_verifier = Verifier(secp256k1)
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
+
+@app.route('/api/hash/draw')
+def hashDraw():
+    n = str(random.randint(1, 10))
+    nonce = str(uuid.uuid4())
+    hash = sha256((nonce+n).encode()).hexdigest()
+    hashes[hash] = (nonce, n)
+
+    return flask.jsonify({
+        'hash': hash,
+    })
+
+
+@app.route('/api/hash/guess', methods=['POST'])
+def hashGuess():
+    data = flask.request.json
+    hash = data['hash']
+    try:
+        nonce, n = hashes[hash]
+    except KeyError:
+        return flask.jsonify({
+            'result': 'failure',
+            'message': 'Hash was found',
+        })
+
+    if sha256((nonce+data['n']).encode()).hexdigest() == hash:
+        return flask.jsonify({
+            'result': 'success',
+            'nonce': nonce,
+            'n': n,
+        })
+    else:
+        return flask.jsonify({
+            'result': 'failure',
+            'nonce': nonce,
+            'n': n,
+        })
+
 
 
 
@@ -54,6 +95,7 @@ def draw():
         'public_key x coordinate': str(server_prover.public_key.x),
         'public_key y coordinate': str(server_prover.public_key.y),
     })
+
 
 
 '''
@@ -168,22 +210,7 @@ def guess():
             'message': f'You guessed the wrong number the correct number was {drawn_number}',
         }) 
 
-# @app.route('/api/guess', methods=['POST'])
-# def guess():
-#     data = flask.request.json
-#     hash = data['hash']
-#     nonce, n = hashes[hash]
 
-#     if sha256((nonce+data['n']).encode()).hexdigest() == hash:
-#         return flask.jsonify({
-#             'result': 'success',
-#             'nonce': nonce,
-#         })
-#     else:
-#         return flask.jsonify({
-#             'result': 'failure',
-#             'nonce': nonce,
-#         })
 
 if __name__ == '__main__':
     

@@ -33,6 +33,9 @@ class ElipticPoint:
             if current_bit == "1":
                 target_point = target_point.add_point(self)
         return target_point
+    
+    def __str__(self):
+        return f"{self.x} {self.y}"
 
 class ElipticCurve:
     def __init__(self, a, b, p, order):
@@ -66,7 +69,7 @@ class Prover:
         c = sha3_256((str(self.curve.G)+str(self.public_key)+str(R)).encode('utf-8')).hexdigest()
         c = int(c, 16)
         e = (number + self.secret*c) % self.curve.order
-        return R, e
+        return R, e, c
 
 
 """
@@ -105,11 +108,18 @@ class Verifier:
 
     :return: True if the proof is correct, False otherwise
     """
-    def check(self, r, R_obtained):
-        R = self.curve.G.multiply_point(r)
-        if R_obtained.x == R.x and R_obtained.y == R.y:
-            return True
+    def check(self, r, e, public_key, ):
+        _R = self.curve.G.multiply_point(r)
 
+        c = sha3_256((str(self.curve.G)+str(public_key)+str(_R)).encode('utf-8')).hexdigest()
+        c = int(c, 16)
+        ##### Check if eG = R + cX #####
+        lhs = self.curve.G.multiply_point(e)
+        rhs = public_key.multiply_point(c)
+        rhs = rhs.add_point(_R)
+        if lhs.x == rhs.x and lhs.y == rhs.y:
+            return True
+        return False
 
         
 
@@ -121,12 +131,12 @@ if __name__ == "__main__":
     r = 312
     Alice = Prover(secp256k1, r)
     Bob = Verifier(secp256k1)
-    R, e = Alice.prove(12736871263781628)
+    R, e, c = Alice.prove(12736871263781628)
     if Bob.verify(R, e, Alice.public_key):
         print("Success")
     else:
         print("Failure")
-    if Bob.check(12736871263781628, R):
+    if Bob.check(12736871263781628, e, Alice.public_key):
         print("Success")
     else:
         print("Failure")

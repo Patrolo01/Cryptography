@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZK Example</title>
+</head>
+<body>
+  <div class="nav">
+    <a href="index.html">Hash based number guesser</a>
+    <span>|</span>
+    <a href="index.html">Fair coin flip</a>
+  </div>
+  <div class="container">
+    <div class="input">
+      <label for="hash">Random seed:</label>
+      <input type="text" id="n"> <button id="generate">generate</button>
+    </div>
+  </div>
+  <div class="input">
+    <label for="hash">sha256(Random seed):</label>
+    <input type="text" id="nhashed" disabled> <button id="send">send</button>
+  </div>
+  <div class="input">
+    <label for="hash">sha256(server's random seed):</label>
+    <input type="text" id="servernhashed" disabled>
+  </div>
+  <div>
+    <button id="reveal">reveal</button>
+  </div>
+  <div id="result">
+
+  </div>
+  <div class="input">
+    <label for="hash">Server's random seed:</label>
+    <input type="text" id="servern" disabled>
+  </div>
+
+  <div class="input">
+    <label for="hash">Server's RNG result:</label>
+    <input type="text" id="server-result" disabled><button id="verify">verify</button>
+  </div>
+  <div class="input">
+    <label for="hash">Client's RNG result:</label>
+    <input type="text" id="client-result" disabled>
+  </div>
+  <script src="coinflip.js"></script>
+</body>
+</html>

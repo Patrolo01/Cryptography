@@ -4,7 +4,6 @@ import random
 import uuid
 from hashlib import sha256
 from utils import ElipticCurve, ElipticPoint, Prover, Verifier
-from flask_cors import CORS, cross_origin
 
 
 app = flask.Flask(__name__, static_folder='public', static_url_path='')
@@ -22,6 +21,10 @@ global drawn_number
 drawn_number = None
 server_prover = Prover(secp256k1, r)
 client_verifier = Verifier(secp256k1)
+
+def lcg(seed):
+        res = (seed * 1103515245 + 12345) & 0x7fffffff
+        return res % 2
 
 @app.route('/')
 def index():
@@ -63,14 +66,38 @@ def hashGuess():
             'nonce': nonce,
             'n': n,
         })
+    
+@app.route('/api/coinflip/commit', methods=['POST'])
+def hashCoinflip():
+    data = flask.request.json
+    servern = int(random.random() * 1000000);
+    hash = sha256(str(servern).encode()).hexdigest()
+    hashes_coinflip[hash] = (servern, data['hash'])
 
+    return flask.jsonify({
+        'hash': hash,
+    })
 
-
-
-
-@app.route('/shnorr')
-def index():
-    return flask.send_from_directory('public', 'shnorr.html')
+@app.route('/api/coinflip/reveal', methods=['POST'])
+def hashCoinflipReveal():
+    data = flask.request.json
+    try:
+        servern, hash = hashes_coinflip[data['hash']]
+    except KeyError:
+        return flask.jsonify({
+            'result': 'failure',
+            'message': 'Hash was not found',
+        })
+    
+    seed = data['n'] ^ servern
+    rnd = lcg(seed)
+    
+    return flask.jsonify({
+            'servern': servern,
+            'hash': hash,
+            'rnd': rnd
+        })
+        
 
 '''
 This route is used to draw a number n and prove the knowledge of the number n

@@ -1,3 +1,4 @@
+import json
 import flask
 import random
 import uuid
@@ -13,9 +14,10 @@ G = ElipticPoint(550662630222773436695787188951685343262506034537775941755001873
 secp256k1.add_G_point(G)
 #server private key
 r = 312
+global drawn_number
 drawn_number = None
 server_prover = Prover(secp256k1, r)
-
+client_verifier = Verifier(secp256k1)
 
 '''
 This route is used to draw a number n and prove the knowledge of the number n
@@ -29,14 +31,18 @@ Output:
 '''
 @app.route('/api/draw')
 def draw():
-    n = str(random.randint(1, 100))
+    n = random.randint(1, 100)
     R, e = server_prover.prove(n)
+    global drawn_number
     drawn_number = n
-
+    x = str(R.x)
+    y = str(R.y)
     return flask.jsonify({
-        'R - Point on ElipticCurve': R,
+        'R.x - x coordinate of Point on ElipticCurve': str(R.x),
+        'R.y - y coordinate of Point on ElipticCurve': str(R.y),
         'e - Signature': e,
-        'public_key': server_prover.public_key,
+        'public_key x coordinate': server_prover.public_key.x,
+        'public_key y coordinate': server_prover.public_key.y,
     })
 
 
@@ -53,11 +59,14 @@ Input:
 @app.route('/api/verify', methods=['POST'])
 def verify():
     data = flask.request.json
-    R = data['R']
+    Rx = data['Rx']
+    Ry = data['Ry']
+    R = ElipticPoint(int(Rx), int(Ry), secp256k1)
     e = data['e']
-    public_key = data['public_key']
-
-    if clien_verifier.verify(R, e, public_key):
+    public_keyx = data['public_keyx']
+    public_keyy = data['public_keyy']
+    public_key = ElipticPoint(int(public_keyx), int(public_keyy), secp256k1)
+    if client_verifier.verify(R, e, public_key):
         return flask.jsonify({
             'result': 'success',
             'message': 'The proof is correct',
@@ -74,18 +83,22 @@ This route is used to check if the proof is of some number n
 
 Input:
 {
-    "R": "Point on ElipticCurve given by the prover",
-    "n": "Number which was to be proved"
+    "r": "The number to be checked",
+    "e" : "The signature",
+    "public_keyx": "x cordinate of Public key of the prover",
+    "public_keyy": "y cordinate of Public key of the prover"
 }
 '''    
 @app.route('/api/checkifhonest', methods=['POST'])
 def checkifhonest():
     data = flask.request.json
-    R = data['R']
-    n = data['n']
+    r = data['r']
+    e = data['e']
+    public_keyx = data['public_keyx']
+    public_keyy = data['public_keyy']
+    public_key = ElipticPoint(int(public_keyx), int(public_keyy), secp256k1)
     
-
-    if clien_verifier.check(n, R):
+    if client_verifier.check(r, e, public_key):
         return flask.jsonify({
             'result': 'success',
             'message': 'The proof is correct',
@@ -114,6 +127,7 @@ Output:
 def guess():
     data = flask.request.json
     guess = data['guess']
+    global drawn_number
     if drawn_number == None:
         return flask.jsonify({
             'result': 'failure',
@@ -150,15 +164,15 @@ def guess():
 if __name__ == '__main__':
     
 
-    clien_verifier = Verifier(secp256k1)
+    # clien_verifier = Verifier(secp256k1)
     
-    #### To prove the knowledge of some number x ####
-    x = 123456
-    #### Generate R and e ####
-    R, e = server_prover.prove(x)
-    #### To verify the proof ####
-    print(clien_verifier.verify(R, e, server_prover.public_key))
-    #### To check after reveal if the proof was of x ####
-    print(clien_verifier.check(x, R))
+    # #### To prove the knowledge of some number x ####
+    # x = 123456
+    # #### Generate R and e ####
+    # R, e = server_prover.prove(x)
+    # #### To verify the proof ####
+    # print(clien_verifier.verify(R, e, server_prover.public_key))
+    # #### To check after reveal if the proof was of x ####
+    # print(clien_verifier.check(x, R))
 
     app.run(debug=True)

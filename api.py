@@ -4,8 +4,12 @@ import random
 import uuid
 from hashlib import sha256
 from utils import ElipticCurve, ElipticPoint, Prover, Verifier
+from flask_cors import CORS, cross_origin
+
 
 app = flask.Flask(__name__, static_folder='public')
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 hashes = dict()
 
@@ -18,6 +22,13 @@ global drawn_number
 drawn_number = None
 server_prover = Prover(secp256k1, r)
 client_verifier = Verifier(secp256k1)
+
+
+
+
+@app.route('/shnorr')
+def index():
+    return flask.send_from_directory('public', 'shnorr.html')
 
 '''
 This route is used to draw a number n and prove the knowledge of the number n
@@ -40,9 +51,9 @@ def draw():
     return flask.jsonify({
         'R.x - x coordinate of Point on ElipticCurve': str(R.x),
         'R.y - y coordinate of Point on ElipticCurve': str(R.y),
-        'e - Signature': e,
-        'public_key x coordinate': server_prover.public_key.x,
-        'public_key y coordinate': server_prover.public_key.y,
+        'e - Signature': str(e),
+        'public_key x coordinate': str(server_prover.public_key.x),
+        'public_key y coordinate': str(server_prover.public_key.y),
     })
 
 
@@ -58,14 +69,23 @@ Input:
 '''
 @app.route('/api/verify', methods=['POST'])
 def verify():
+    
     data = flask.request.json
-    Rx = data['Rx']
-    Ry = data['Ry']
-    R = ElipticPoint(int(Rx), int(Ry), secp256k1)
-    e = data['e']
-    public_keyx = data['public_keyx']
-    public_keyy = data['public_keyy']
+    Rx = int(data['Rx'])
+    Ry = int(data['Ry'])
+    try:
+        R = ElipticPoint(int(Rx), int(Ry), secp256k1)
+    except Exception as e:
+        return flask.jsonify({
+            'result': 'failure',
+            'message': 'Invalid point',
+        })
+    e = int(data['e'])
+    public_keyx = int(data['public_keyx'])
+    public_keyy = int(data['public_keyy'])
+    print(e)
     public_key = ElipticPoint(int(public_keyx), int(public_keyy), secp256k1)
+
     if client_verifier.verify(R, e, public_key):
         return flask.jsonify({
             'result': 'success',
@@ -92,12 +112,17 @@ Input:
 @app.route('/api/checkifhonest', methods=['POST'])
 def checkifhonest():
     data = flask.request.json
-    r = data['r']
-    e = data['e']
+    r = int(data['r'])
+    e = int(data['e'])
     public_keyx = data['public_keyx']
     public_keyy = data['public_keyy']
-    public_key = ElipticPoint(int(public_keyx), int(public_keyy), secp256k1)
-    
+    try:
+        public_key = ElipticPoint(int(public_keyx), int(public_keyy), secp256k1)
+    except Exception as e:
+        return flask.jsonify({
+            'result': 'failure',
+            'message': 'Invalid point (not on eliptic curve)',
+        })
     if client_verifier.check(r, e, public_key):
         return flask.jsonify({
             'result': 'success',

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Call Example</title>
+    <script>
+        
+        const baseurl = "http://127.0.0.1:5000";
+
+        function checkIfHonest(number, signature, publicKeyX, publicKeyY) {
+            // Make your API call here
+            // You can use JavaScript's built-in fetch() function or any other library of your choice
+            // Example:
+            fetch(`${baseurl}/api/checkifhonest`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    r: number
+                    , e: signature
+                    , public_keyx: publicKeyX
+                    , public_keyy: publicKeyY
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Process the API response data here
+                console.log(data);
+                const message = document.createElement('div');
+                message.innerHTML += data['message'];
+                document.body.appendChild(message);
+            })
+            .catch(error => {
+                // Handle any errors that occur during the API call
+                console.error(error);
+            });
+        }
+
+        function guessNumber(number) {
+            // Make your API call here
+            // You can use JavaScript's built-in fetch() function or any other library of your choice
+            // Example:
+            fetch(`${baseurl}/api/guess`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    guess: number
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Process the API response data here
+                console.log(data);
+                const message = document.createElement('div');
+                message.innerHTML += data['message'];
+                document.body.appendChild(message);
+                signatureVerification = document.createElement('div');
+                signatureVerification.innerHTML = "<br>Signature Verification: ";
+                document.body.appendChild(signatureVerification);
+                const signatureInput = document.createElement('input');
+                signatureInput.type = 'text';
+                signatureInput.placeholder = 'Enter signature';
+                document.body.appendChild(signatureInput);
+
+                const publicKeyXInput = document.createElement('input');
+                publicKeyXInput.type = 'text';
+                publicKeyXInput.placeholder = 'Enter public key x';
+                document.body.appendChild(publicKeyXInput);
+
+                const publicKeyYInput = document.createElement('input');
+                publicKeyYInput.type = 'text';
+                publicKeyYInput.placeholder = 'Enter public key y';
+                document.body.appendChild(publicKeyYInput);
+
+                const numberInput = document.createElement('input');
+                numberInput.type = 'number';
+                numberInput.placeholder = 'Enter number';
+                numberInput.min = 1;
+                numberInput.max = 100;
+                document.body.appendChild(numberInput);
+
+                const commitButton = document.createElement('button');
+                commitButton.innerHTML = 'Commit';
+                commitButton.onclick = function() {
+                    const signature = signatureInput.value;
+                    const publicKeyX = publicKeyXInput.value;
+                    const publicKeyY = publicKeyYInput.value;
+                    const number = numberInput.value;
+                    checkIfHonest(number, signature, publicKeyX, publicKeyY);
+                };
+                document.body.appendChild(commitButton);
+            })
+            .catch(error => {
+                // Handle any errors that occur during the API call
+                console.error(error);
+            });
+        }
+
+        function checkProof() {
+            // Make your API call here
+            // You can use JavaScript's built-in fetch() function or any other library of your choice
+            // Example:
+            console.log(pub_key_x);
+            fetch(`${baseurl}/api/verify`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    Rx: Rx
+                    , Ry: Ry
+                    , e: e
+                    , public_keyx: pub_key_x
+                    , public_keyy: pub_key_y
+
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Process the API response data here
+                console.log(data);
+                const message = document.createElement('div');
+                message.innerHTML = "Proof is: ";
+                if (data['result'] == 'success') {
+                    message.innerHTML += "Valid";
+                } else {
+                    message.innerHTML += "Invalid";
+                }
+                document.body.appendChild(message);
+                const numberInput = document.createElement('input');
+                numberInput.type = 'number';
+                numberInput.placeholder = 'Enter number to guess';
+                numberInput.min = 1;
+                numberInput.max = 100;
+                document.body.appendChild(numberInput);
+
+                const commitButton = document.createElement('button');
+                commitButton.innerHTML = 'Commit';
+                commitButton.onclick = function() {
+                    const number = numberInput.value;
+                    guessNumber(number);
+                };
+                document.body.appendChild(commitButton);
+            })
+            .catch(error => {
+                // Handle any errors that occur during the API call
+                console.error(error);
+            });
+        }
+        function makeAPICall() {
+            // Make your API call here
+            // You can use JavaScript's built-in fetch() function or any other library of your choice
+            // Example:
+            fetch(`${baseurl}/api/draw`)
+                .then(response => response.json())
+                .then(data => {
+                    // Process the API response data here
+                    console.log(data);
+                    const message = document.createElement('div');
+                    message.innerHTML = "Number rolled: ";
+                    
+                    document.body.appendChild(message);
+                    const result = document.createElement('div');
+                    result.innerHTML = `Proof:`;
+                    result.innerHTML += "<br>"; // Add a new line
+                    Rx = data['R.x - x coordinate of Point on ElipticCurve'];
+                    Ry = data['R.y - y coordinate of Point on ElipticCurve'];  
+                    e = data['e - Signature'];
+                    pub_key_x = data['public_key x coordinate'];   
+                    pub_key_y = data['public_key y coordinate']; 
+
+
+                    console.log(pub_key_x);
+                    result.innerHTML += `R.x: ${Rx}`;
+                    result.innerHTML += "<br>"; // Add a new line
+                    result.innerHTML += `R.y: ${Ry}`;
+                    result.innerHTML += "<br>"; // Add a new line
+                    result.innerHTML += `e: ${e}`;
+                    result.innerHTML += "<br>"; // Add a new line
+                    result.innerHTML += `public_key x: ${pub_key_x}`;
+                    result.innerHTML += "<br>"; // Add a new line
+                    result.innerHTML += `public_key y: ${pub_key_y}`;
+                    result.innerHTML += "<br>"; // Add a new line
+                    const checkButton = document.createElement('button');
+                    checkButton.innerHTML = "Check Proof";
+                    checkButton.onclick = checkProof;
+
+                    document.body.appendChild(result);
+                    document.body.appendChild(checkButton);
+
+                })
+                .catch(error => {
+                    // Handle any errors that occur during the API call
+                    console.error(error);
+                });
+        }
+    </script>
+</head>
+<body>
+    <button onclick="makeAPICall()">Roll the number</button>
+</body>
+</html>

@@ -11,6 +11,7 @@ app = flask.Flask(__name__, static_folder='public', static_url_path='')
 
 
 hashes = dict()
+hashes_coinflip = dict()
 
 secp256k1 = ElipticCurve(0, 7, pow(2, 256) - pow(2, 32) - pow(2, 9) - pow(2, 8) - pow(2, 7) - pow(2, 6) - pow(2, 4) - pow(2, 0), 115792089237316195423570985008687907852837564279074904382605163141518161494337)
 G = ElipticPoint(55066263022277343669578718895168534326250603453777594175500187360389116729240, 32670510020758816978083085130507043184471273380659243275938904335757337482424, secp256k1)
@@ -21,6 +22,7 @@ global drawn_number
 drawn_number = None
 server_prover = Prover(secp256k1, r)
 client_verifier = Verifier(secp256k1)
+
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
@@ -46,7 +48,7 @@ def hashGuess():
     except KeyError:
         return flask.jsonify({
             'result': 'failure',
-            'message': 'Hash was found',
+            'message': 'Hash was not found',
         })
 
     if sha256((nonce+data['n']).encode()).hexdigest() == hash:

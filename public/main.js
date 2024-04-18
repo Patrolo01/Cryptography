@@ -62,5 +62,5 @@ document.getElementById('guess').addEventListener('click', () => {
 });
 
 document.getElementById('verify').addEventListener('click', () => {
-  verify(nonce, correctN);
+  verify(document.getElementById('verify-nonce').value, document.getElementById('verify-n').value);
 });
